@@ -8,6 +8,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerBehaviour : MonoBehaviour
 {
+    public VitualJoyStick virtualJoyStick;
+
     private const float Min = 0.3f;
     private const float Max = 3f;
     public float minSwipeDistance = 0.25f;
@@ -35,10 +37,12 @@ public class PlayerBehaviour : MonoBehaviour
     [Tooltip("How fast the ball moves forwards automatically")]
     [Range(0, 10)]
     public float rollSpeed = 5;
-
     // Start is called before the first frame update
     void Start()
     {
+#if DEF_DEV
+        Debug.unityLogger.logEnabled = false;
+#endif
         // Get access to our Rigidbody component 
         rb = GetComponent<Rigidbody>();
         minSwipeDistancePixels = minSwipeDistance * Screen.dpi; // minSwipeDistance: 인치, Screen.dpi: 1인치에 몇픽셀인지 변환됨, 고정된 수라서 매번곱할필요x
@@ -46,52 +50,55 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void Update()
     {
-        foreach (Touch touch in Input.touches)
-        {
-            //손가락 하나만 추적함
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    if (fingerId == -1) // fingerId는 양수 안들어오기때문에, fingerId 없을때 -1로 // touch 시작한 시간,
-                    {
-                        fingerId = touch.fingerId;
-                        fingerTouchStartPosition = touch.position;
-                        fingerTouchStartTime = Time.time;
-                    }
-                    break;
+        
 
-                case TouchPhase.Ended:
-                case TouchPhase.Moved:
 
-                case TouchPhase.Canceled: // 터치가 끝난시간
-                    if( fingerId == touch.fingerId )
-                    {
-                        fingerId = -1;
-                        float distance = Vector2.Distance(touch.position, fingerTouchStartPosition);
-                        float time = Time.time - fingerTouchStartTime;
-                        if( distance < minSwipeDistancePixels && time < maxSwipeTime) // 스와이프 만족하는 조건
-                        {
-                            Vector2 dir = touch.position - fingerTouchStartPosition; //방향
-                            dir.Normalize();
+        //foreach (Touch touch in Input.touches)
+        //{
+        //    //손가락 하나만 추적함
+        //    switch (touch.phase)
+        //    {
+        //        case TouchPhase.Began:
+        //            if (fingerId == -1) // fingerId는 양수 안들어오기때문에, fingerId 없을때 -1로 // touch 시작한 시간,
+        //            {
+        //                fingerId = touch.fingerId;
+        //                fingerTouchStartPosition = touch.position;
+        //                fingerTouchStartTime = Time.time;
+        //            }
+        //            break;
 
-                           Vector3 direction3 = dir.x > 0f ? Vector3.right : Vector3.left;
-                            if(!rb.SweepTest(direction3, out RaycastHit hit,sweepDistance ))
-                            {
-                                rb.MovePosition(rb.position + direction3 * sweepDistance);
-                            }
-                            Debug.Log(dir.x < 0 ? "left " : "right");
-                        }
+        //        case TouchPhase.Ended:
+        //        case TouchPhase.Moved:
 
-                        fingerId = -1;
-                        fingerTouchStartPosition = Vector2.zero;
-                        fingerTouchStartTime = 0f;
-                    }
-                    break;
+        //        case TouchPhase.Canceled: // 터치가 끝난시간
+        //            if( fingerId == touch.fingerId )
+        //            {
+        //                fingerId = -1;
+        //                float distance = Vector2.Distance(touch.position, fingerTouchStartPosition);
+        //                float time = Time.time - fingerTouchStartTime;
+        //                if( distance < minSwipeDistancePixels && time < maxSwipeTime) // 스와이프 만족하는 조건
+        //                {
+        //                    Vector2 dir = touch.position - fingerTouchStartPosition; //방향
+        //                    dir.Normalize();
 
-                case TouchPhase.Stationary:
-                    break;
-            }
-        }
+        //                   Vector3 direction3 = dir.x > 0f ? Vector3.right : Vector3.left;
+        //                    if(!rb.SweepTest(direction3, out RaycastHit hit,sweepDistance ))
+        //                    {
+        //                        rb.MovePosition(rb.position + direction3 * sweepDistance);
+        //                    }
+        //                    Debug.Log(dir.x < 0 ? "left " : "right");
+        //                }
+
+        //                fingerId = -1;
+        //                fingerTouchStartPosition = Vector2.zero;
+        //                fingerTouchStartTime = 0f;
+        //            }
+        //            break;
+
+        //        case TouchPhase.Stationary:
+        //            break;
+        //    }
+        //}
 
         //움직임체크, 움직일 경우 멀어지고 있는지, 가까워지는지 확인해야함.
         //touch 구조체에 전 프레임 포지션 있음.
@@ -144,16 +151,17 @@ public class PlayerBehaviour : MonoBehaviour
 
 #if UNITY_ANDROID || UNITY_IOS
         //horizontalSpeed = Input.acceleration.x * dodgeSpeed;
-        if (Input.touchCount == 1)
-        {
-            Touch touch = Input.GetTouch(0);
-            var viewportPos = Camera.main.ScreenToViewportPoint(touch.position);
-            horizontalSpeed = viewportPos.x < 0.5 ? -1f : 1f;
-            horizontalSpeed *= dodgeSpeed;
-            Input.GetTouch(0);
-            touch.position = Vector3.zero;
-        }
+        //if (Input.touchCount == 1)
+        //{
+        //    Touch touch = Input.GetTouch(0);
+        //    var viewportPos = Camera.main.ScreenToViewportPoint(touch.position);
+        //    horizontalSpeed = viewportPos.x < 0.5 ? -1f : 1f;
+        //    horizontalSpeed *= dodgeSpeed;
+        //    Input.GetTouch(0);
+        //    touch.position = Vector3.zero;
+        //}
 #endif
+        horizontalSpeed = dodgeSpeed * virtualJoyStick.Input.x;
         rb.AddForce(horizontalSpeed, 0, rollSpeed);
     }
 

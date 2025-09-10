@@ -6,6 +6,7 @@ public class VitualJoyStick : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
 {
     public RectTransform background;
     public RectTransform handle;
+
     private float radius = 0;
     public Vector2 Input {  get; private set; }
 
@@ -17,6 +18,15 @@ public class VitualJoyStick : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     public void OnDrag(PointerEventData eventData)
     {
         var touchPosition = eventData.position;
+        if(RectTransformUtility.ScreenPointToLocalPointInRectangle( //@
+            background, touchPosition, eventData.enterEventCamera, out Vector2 position))
+        {
+            var delta = position;
+            position = Vector2.ClampMagnitude(position, radius); // 반경 클램프 , radius보다 작으면 그대로사용, 크면 radius로
+            handle.anchoredPosition = position;
+            
+            Input = delta / radius;
+        }
         throw new System.NotImplementedException();
     }
 
@@ -24,7 +34,7 @@ public class VitualJoyStick : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     {
         Input = Vector2.zero;
         handle.anchoredPosition = Vector2.zero;
-        throw new System.NotImplementedException();
+        
     }
 
 
@@ -39,6 +49,6 @@ public class VitualJoyStick : MonoBehaviour, IDragHandler, IBeginDragHandler, IE
     // Update is called once per frame
     void Update()
     {
-        
+        Debug.Log(Input);
     }
 }
