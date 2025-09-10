@@ -7,6 +7,7 @@ public class ObstacleBehaviour : MonoBehaviour
     [Tooltip("How long to wait before restarting the game")]
     public float waitTime = 2.0f;
 
+
     void OnCollisionEnter(Collision collision)
     {
         // First check if we collided with the player 
